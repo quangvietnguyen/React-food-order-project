@@ -4,6 +4,10 @@ import Modal from '../UI/Modal';
 import CartContext from '../../storage/cart-context';
 import CartItem from './CartItem';
 import Checkout from './Checkout';
+import {Elements} from '@stripe/react-stripe-js';
+import {loadStripe} from '@stripe/stripe-js';
+
+const stripePromise = loadStripe('pk_test_51JdSEwK8QP9eaYgIrRAGcwaOZFM8c4sD6ChxsTFkjIV1WUdBThge04Nin20mJf8xuCsxngfN5GaxDd3rBJz54wiJ00S1opVFEz');
 
 const Cart = (props) => {
     
@@ -63,7 +67,7 @@ const Cart = (props) => {
         </div>
     )
 
-    const cartModalContent = <React.Fragment>
+    const cartModalContent = <Elements stripe={stripePromise}>
         {cartItems}
             <div className={styles.total}>
                 <span>Total Amount</span>
@@ -71,7 +75,7 @@ const Cart = (props) => {
             </div>
             {isCheckout && <Checkout onSubmit={submitOrderHandler} onCancel={props.onClose}/>}
             {!isCheckout && modalAction}
-    </React.Fragment>
+    </Elements>
 
     const isSubmittingModalContent = <p>Sending order data...</p>;
 

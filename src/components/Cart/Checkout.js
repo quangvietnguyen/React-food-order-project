@@ -1,13 +1,33 @@
-import { useRef, useState } from 'react';
-// import { Elements } from '@stripe/react-stripe-js';
-// import { loadStripe } from '@stripe/stripe-js';
+import { useRef, useState, useContext, useEffect } from 'react';
+import {CardElement, useStripe, useElements} from '@stripe/react-stripe-js';
 import styles from './Checkout.module.css';
+import CartContext from '../../storage/cart-context';
 
 const isEmpty = (value) => value.trim() === '';
 const isSixChars = (value) => value.trim().length === 6;
-//const stripePromise = loadStripe('pk_test_51JdSEwK8QP9eaYgIrRAGcwaOZFM8c4sD6ChxsTFkjIV1WUdBThge04Nin20mJf8xuCsxngfN5GaxDd3rBJz54wiJ00S1opVFEz');
 
 const Checkout = (props) => {
+    //-----------------------------STRIPE-----------------------------//
+    const stripe = useStripe();
+    const elements = useElements();
+    const [paymentRequest, setPaymentRequest] = useState(null);
+    // useEffect(() => {
+    //     if (stripe) {
+    //         const pr = stripe.paymentRequest({
+    //             country: 'CA',
+    //             currency: 'cad',
+    //             total: {
+    //               label: 'Demo total',
+    //               amount: Math.round(cartContext.totalAmount),
+    //             },
+    //             requestPayerName: true,
+    //             requestPayerEmail: true,
+    //             //card: cardElement,
+    //           });
+    //     }
+    // },[stripe])
+    //-----------------------------STRIPE-----------------------------//
+    const cartContext = useContext(CartContext);
     const [formInputsValidity, setFormInputsValidity] = useState({
         name: true,
         street: true,
@@ -18,7 +38,8 @@ const Checkout = (props) => {
     const streetInputRef = useRef();
     const postalInputRef = useRef();
     const cityInputRef = useRef();
-    const confirmHandler = (event) => {
+
+    const confirmHandler = async (event) => {
         event.preventDefault();
         
         const enteredName = nameInputRef.current.value;
@@ -43,13 +64,39 @@ const Checkout = (props) => {
         if (!formIsValid) {
             return;
         }
+        //-----------------------------STRIPE-----------------------------//
+        if (!stripe || !elements) {
+            // Stripe.js has not loaded yet. Make sure to disable
+            // form submission until Stripe.js has loaded.
+            return;
+          }
+      
+          // Get a reference to a mounted CardElement. Elements knows how
+          // to find your CardElement because there can only ever be one of
+          // each type of element.
+          const cardElement = elements.getElement(CardElement);
+      
+          // Use your card Element with other Stripe.js APIs
+          const {error, paymentMethod} = await stripe.createPaymentMethod({
+            type: 'card',
+            card: cardElement,
+          });
+            
+      
+          if (error) {
+            console.log('[error]', error);
+          } else {
+            console.log('[PaymentMethod]', paymentMethod);
+          }
 
+        //-----------------------------STRIPE-----------------------------//
         props.onSubmit({
             name: enteredName,
             street: enteredStreet,
             city: enteredCity,
             postalCode: enteredPostal
         });
+        
     };
 
     const nameControlStyle = `${styles.control} ${formInputsValidity.name ? '' : styles.invalid}`;
@@ -80,9 +127,32 @@ const Checkout = (props) => {
             <input type='text' id='city' ref={cityInputRef}/>
             {!formInputsValidity.city && <p>Please enter a valid city!</p>}
         </div>
+        <div className={styles.control}>
+            <label htmlFor='payment'>Payment Method</label>
+            <div style={{border:'1px solid #ccc', padding:'3px', borderRadius:'4px'}}>
+                <CardElement
+                    id='payment'
+                    options={{
+                        style: {
+                        base: {
+                            fontSize: '20px',
+                            color: '#424770',
+                            '::placeholder': {
+                            color: '#aab7c4',
+                            },
+                        },
+                        invalid: {
+                            color: '#9e2146',
+                        },
+                        },
+                    }}
+                />
+            </div>
+        </div>
+        <p>Powerby Stripe.com</p>
         <div className={styles.actions}>
             <button type="button" onClick={props.onCancel}>Cancel</button>
-            <button className={styles.submit}>Confirm</button>
+            <button type="submit" disabled={!stripe} className={styles.submit}>Pay CAD {cartContext.totalAmount}</button>
         </div>
     </form>
     )
