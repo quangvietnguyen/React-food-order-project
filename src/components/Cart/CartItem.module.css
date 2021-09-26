@@ -63,3 +63,9 @@
   background-color: #8a2b06;
   color: white;
 }
+
+.cart-item button:disabled {
+  background-color: #ccc;
+  border: #ccc;
+  color: white;
+}
