@@ -103,8 +103,7 @@ const Checkout = (props) => {
     const streetControlStyle = `${styles.control} ${formInputsValidity.street ? '' : styles.invalid}`;
     const postalControlStyle = `${styles.control} ${formInputsValidity.postalCode ? '' : styles.invalid}`;
     const cityControlStyle = `${styles.control} ${formInputsValidity.city ? '' : styles.invalid}`;
-
-
+    
     return (
     <form className={styles.form} onSubmit={confirmHandler}>
         <div className={nameControlStyle}>
@@ -152,7 +151,13 @@ const Checkout = (props) => {
         <p>Powerby Stripe.com</p>
         <div className={styles.actions}>
             <button type="button" onClick={props.onCancel}>Cancel</button>
-            <button type="submit" disabled={!stripe} className={styles.submit}>Pay CAD {cartContext.totalAmount}</button>
+            <button
+                type="submit"
+                disabled={!stripe}
+                className={styles.submit}
+            >
+                Pay CAD {cartContext.totalAmount.toFixed(2)}
+            </button>
         </div>
     </form>
     )
